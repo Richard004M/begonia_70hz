@@ -22,18 +22,18 @@ jobs:
 
       - name: 4. Build Kernel
         run: |
-          # 1. Cài đặt các thư viện hệ thống cần thiết
-          sudo apt update && sudo apt install -y bc build-essential bison flex libssl-dev libelf-dev libncurses5-dev
+          # Cài đặt thư viện hệ thống và thư viện hỗ trợ 32-bit cho Toolchain cũ
+          sudo apt update
+          sudo apt install -y bc build-essential bison flex libssl-dev libelf-dev libncurses5-dev lib32z1 lib32stdc++6
           
-          # 2. Tải Toolchain chuẩn của Android (Google GCC 4.9)
+          # Tải Toolchain chuẩn của Android (Google GCC 4.9)
           git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b master toolchain
           
           cd kernel_source
           export ARCH=arm64
-          # Trỏ đường dẫn đến Toolchain vừa tải (dùng đường dẫn tuyệt đối)
           export CROSS_COMPILE=$GITHUB_WORKSPACE/toolchain/bin/aarch64-linux-android-
           
-          # 3. Tiến hành Build
+          # Tiến hành Build
           make O=out begonia_user_defconfig
           make -j$(nproc) O=out
 
