@@ -1,46 +1,16 @@
-name: Build Kernel 70Hz Begonia
-on:
-  workflow_dispatch:
-
-jobs:
-  build_kernel:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 1. Checkout Patched Files
-        uses: actions/checkout@v4
-        with:
-          path: patch_files
-
-      - name: 2. Clone Kernel Source
+- name: 4. Build Kernel
         run: |
-          git clone --depth=1 https://github.com/MiCode/Xiaomi_Kernel_OpenSource.git -b begonia-r-oss kernel_source
-
-      - name: 3. Apply Your Changes (Patch)
-        run: |
-          cp patch_files/nt35695_fhd_dsi_cmd_truly_rt5081.c kernel_source/drivers/misc/mediatek/lcm/nt35695_fhd_dsi_cmd_truly_rt5081/
-          cp patch_files/k85v1_64.dts kernel_source/arch/arm64/boot/dts/mediatek/
-
-      - name: 4. Build Kernel
-        run: |
-          # Cài đặt đầy đủ trình biên dịch aarch64
-          sudo apt update && sudo apt install -y bc build-essential bison flex libssl-dev libelf-dev clang lld llvm gcc-aarch64-linux-gnu
+          # 1. Cài đặt các thư viện hệ thống cần thiết
+          sudo apt update && sudo apt install -y bc build-essential bison flex libssl-dev libelf-dev libncurses5-dev
+          
+          # 2. Tải Toolchain chuẩn của Android (Google)
+          git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b master toolchain
+          
           cd kernel_source
           export ARCH=arm64
-          export CROSS_COMPILE=aarch64-linux-gnu-
-          # Chạy defconfig và chỉ định thư mục đầu ra rõ ràng
+          # Trỏ đường dẫn đến Toolchain vừa tải
+          export CROSS_COMPILE=$GITHUB_WORKSPACE/toolchain/bin/aarch64-linux-android-
+          
+          # 3. Tiến hành Build
           make O=out begonia_user_defconfig
           make -j$(nproc) O=out
-
-      - name: 5. Pack AnyKernel3
-        run: |
-          git clone https://github.com/osm0sis/AnyKernel3.git
-          # Lấy file Image.gz-dtb từ đúng thư mục out
-          cp kernel_source/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
-          cd AnyKernel3
-          zip -r9 ../Kernel_70Hz_Begonia.zip *
-
-      - name: 6. Upload Result
-        uses: actions/upload-artifact@v4
-        with:
-          name: Kernel_70Hz_Flashable
-          path: Kernel_70Hz_Begonia.zip
