@@ -22,16 +22,19 @@ jobs:
 
       - name: 4. Build Kernel
         run: |
-          sudo apt update && sudo apt install -y bc build-essential bison flex libssl-dev libelf-dev clang lld llvm
+          # Cài đặt đầy đủ trình biên dịch aarch64
+          sudo apt update && sudo apt install -y bc build-essential bison flex libssl-dev libelf-dev clang lld llvm gcc-aarch64-linux-gnu
           cd kernel_source
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
-          make begonia_user_defconfig
+          # Chạy defconfig và chỉ định thư mục đầu ra rõ ràng
+          make O=out begonia_user_defconfig
           make -j$(nproc) O=out
 
       - name: 5. Pack AnyKernel3
         run: |
           git clone https://github.com/osm0sis/AnyKernel3.git
+          # Lấy file Image.gz-dtb từ đúng thư mục out
           cp kernel_source/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
           cd AnyKernel3
           zip -r9 ../Kernel_70Hz_Begonia.zip *
